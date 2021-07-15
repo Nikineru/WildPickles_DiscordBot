@@ -24,4 +24,8 @@ async def Clear(ctx, number):
     for message in messages:
         await message.delete()
 
+@client.command()
+async def Ping(ctx):
+    await ctx.send("Pong!")
+
 client.run(TOKEN)
