@@ -1,4 +1,6 @@
+import re
 import discord
+from discord import utils
 from discord.ext import commands
 
 
@@ -6,7 +8,7 @@ class Channel:
     def __init__(self, name, type:int, access_role=None): # type (0 - текстовый, 1 - голосовой)
         self.Name = name
         self.Type = type
-        self.AccessRole = access_role
+        self.AcessRole = access_role
             
     async def initialize(self, guild, category):
         if(self.Type == 0):
@@ -15,14 +17,38 @@ class Channel:
             await guild.create_voice_channel(self.Name, category=category)
 
 
-class Game:
-    def __init__(self):
-        self.Name = "default name"
-        self.AccessRole=None
-        self.Channels = list()
+class GameRemover:
+    def __init__(self, guild, name, role_name):
+        self.Guild = guild
+        self.RoleName = role_name
+        self.Name = name     
 
-    def SetName(self, name:str):
+    async def Remove(self):
+        try:
+            game_category = utils.get(self.Guild.categories, name=self.Name)
+
+            for channel in game_category.channels:
+                await channel.delete()
+
+            await game_category.delete()
+            
+            game_role = utils.get(self.Guild.roles, name=self.RoleName)
+            await game_role.delete()
+            
+            return True
+
+        except Exception as exeption:
+            print(str(exeption))
+            return False
+
+
+class GameCreator():
+    def __init__(self, guild,  name:str, role_name:str):
+        self.Guild = guild
         self.Name = name
+        self.Channels = list()
+        self.AcessRole = None
+        self.AcessRoleName = role_name
 
     def AddTextChannels(self, *channels_names:str):
         for name in channels_names:
@@ -32,45 +58,20 @@ class Game:
         for name in channels_names:
             self.Channels.append(Channel(name, 1))
 
-    def GetRoleName(self):
-        return f"{self.Name} developer"
-
-    async def GetSameGames(self, guild):
-        categories = guild.categories
-
-        for category in categories:
-            if category.name == self.Name:
-                return False
-        
-        return True
-
-    async def RemoveGame(self, guild):
-        categories = guild.categories
-
-        for category in categories:
-            if category.name == self.Name:
-                for channel in category.channels:
-                    channel.delete()
-
-            category.delete()
-
-        self.AccessRole.delete()
-
-
-    async def Initialize(self, guild):
+    async def Create(self):
         try:
-            self.AccessRole = await guild.create_role(name=self.GetRoleName())
+            self.AcessRole = await self.Guild.create_role(name=self.AcessRoleName)
 
             overwrites = {
-                guild.default_role: discord.PermissionOverwrite(read_messages=False),
-                guild.me: discord.PermissionOverwrite(read_messages=True, send_messages=True),
+                self.Guild.default_role: discord.PermissionOverwrite(read_messages=False),
+                self.Guild.me: discord.PermissionOverwrite(read_messages=True, send_messages=True),
             }
 
-            category = await guild.create_category(self.Name, overwrites=overwrites)
-            await category.set_permissions(self.AccessRole, send_messages=True, read_messages=True)
+            category = await self.Guild.create_category(self.Name, overwrites=overwrites)
+            await category.set_permissions(self.AcessRole, send_messages=True, read_messages=True)
 
             for channel in self.Channels:
-                await channel.initialize(guild, category)
+                await channel.initialize(self.Guild, category)
 
             return True
 
@@ -83,34 +84,64 @@ class Organizer(commands.Cog):
     def __init__(self, client):
         self.client = client
 
-        self.GamePrefab = Game()
-        self.GamePrefab.AddTextChannels("важное-❗", "основной-🛠", "беклог-📋")
-        self.GamePrefab.AddVoiceChannels("переговорная-💼")
+    def GetValidName(self, text):
+        words = text.split()
+
+        for i in range(len(words)):
+            word = re.sub(r"\W", "", words[i])
+            word = word.replace("_", "")
+            words[i] = word
+
+        result = " ".join(words)
+
+        if len(result) < 1:
+            result = "default name"
+
+        return result.title()
+
+    def GetRoleName(self, text):
+        return f"{self.GetValidName(text)} developer"
 
     @commands.command()
-    async def CreateGame(self, ctx, name):
+    async def CreateGame(self, ctx, *name):
         guild = ctx.guild
         user = ctx.message.author
-
-        self.GamePrefab.SetName(name)
-
-        if(await self.GamePrefab.IsOriginal(guild) is False):
-            await ctx.send(f"К сожалению игра {name} уже разрабатывается")
+        name = self.GetValidName(" ".join(name))
+        role_name = self.GetRoleName(name)
+        
+        if utils.get(guild.categories, name=name):
+            await ctx.send(f"Игра {name} уже разрабатывается 😢")
             return
 
-        InitializeStatus = await self.GamePrefab.Initialize(guild)
+        if len(guild.categories) > 15:
+            await ctx.send("Это похоже на спам 😡")
+            return
 
-        if(InitializeStatus is True):
-            await user.add_roles(self.GamePrefab.AccessRole)
-            await ctx.send(f"Всё готово! Приятной разработки {self.GamePrefab.Name} 👍🏻")
+        creator = GameCreator(guild, name, role_name)
+
+        creator.AddVoiceChannels("переговорная-💼")
+        creator.AddTextChannels("важное-❗", "основной-🛠", "беклог-📋")
+
+        CreateStatus = await creator.Create()
+
+        if(CreateStatus):
+            await user.add_roles(creator.AcessRole)
+            await ctx.send(f"Всё готово! Приятной разработки {creator.Name} 👍🏻")
         else:
-            await ctx.send("Что-то пошло не по планам 😢")
+            await ctx.send(f"Что-то пошло не так во время создания игры {creator.Name} 😢")
 
     @commands.command()
-    async def DeleteGame(self, ctx, name):#TODO
+    async def RemoveGame(self, ctx, *name):
         guild = ctx.guild
-        self.GamePrefab.SetName(name)
-        await self.GamePrefab.RemoveGame(guild)
+        name = self.GetValidName(" ".join(name))
+        remover = GameRemover(guild, name, self.GetRoleName(name))
+
+        RemoveStatus = await remover.Remove()
+
+        if(RemoveStatus):
+            await ctx.send(f"Всё готово! Игра {remover.Name} удалена 👍🏻")
+        else:
+            await ctx.send(f"Что-то пошло не так во время удаления игры {remover.Name} 😢")
 
 def setup(client):
     client.add_cog(Organizer(client))
