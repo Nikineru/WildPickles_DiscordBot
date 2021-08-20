@@ -1,4 +1,4 @@
-from GameChanger import *
+from GameCreator import GameCreator
 from discord import utils
 from discord.ext import commands
 
@@ -12,34 +12,19 @@ class Organizer(commands.Cog):
         guild = ctx.guild
         user = ctx.message.author
         creator = GameCreator(guild, " ".join(name))
-        
 
-        if await creator.GetCategory() is not None:
-            await ctx.send(f"Игра {creator.GameName} уже разрабатывается 😢")
-            return
+        await creator.Create()
+    #@commands.command()
+    #async def RemoveGame(self, ctx, *name):
+    #    guild = ctx.guild
+    #    remover = GameRemover(guild, " ".join(name))
 
-        creator.AddVoiceChannels("переговорная-💼")
-        creator.AddTextChannels("важное-❗", "основной-🛠", "беклог-📋")
+    #    RemoveStatus = await remover.Remove()
 
-        CreateStatus = await creator.Create()
-
-        if(CreateStatus):
-            await user.add_roles(creator.AcessRole)
-            await ctx.send(f"Всё готово! Приятной разработки {creator.GameName} 👍🏻")
-        else:
-            await ctx.send(f"Что-то пошло не так во время создания игры {creator.GameName} 😢")
-
-    @commands.command()
-    async def RemoveGame(self, ctx, *name):
-        guild = ctx.guild
-        remover = GameRemover(guild, " ".join(name))
-
-        RemoveStatus = await remover.Remove()
-
-        if(RemoveStatus):
-            await ctx.send(f"Всё готово! Игра {remover.GameName} удалена 👍🏻")
-        else:
-            await ctx.send(f"Что-то пошло не так во время удаления игры {remover.GameName} 😢")
+    #    if(RemoveStatus):
+    #        await ctx.send(f"Всё готово! Игра {remover.GameName} удалена 👍🏻")
+    #    else:
+    #        await ctx.send(f"Что-то пошло не так во время удаления игры {remover.GameName} 😢")
 
 def setup(client):
     client.add_cog(Organizer(client))

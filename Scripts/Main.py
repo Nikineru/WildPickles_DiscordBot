@@ -1,7 +1,7 @@
 import discord
-from discord import channel
-from discord.ext import commands
+import Logger
 from Token import TOKEN
+from discord.ext import commands
 
 client = commands.Bot(command_prefix = '!')
 
@@ -9,6 +9,7 @@ client = commands.Bot(command_prefix = '!')
 async def on_ready():
     print('Connected')
     client.load_extension('cogs.ProjectOrganizer')
+    client.load_extension('cogs.Music')
 
 @client.event
 async def on_message(message):
@@ -23,6 +24,11 @@ async def Clear(ctx, number):
 
     for message in messages:
         await message.delete()
+
+@client.command(aliases=['call', 'spam'])
+async def Call(ctx, user:discord.User, *text):
+    for i in range(5):
+        await ctx.send(f"{user.mention} {' '.join(text)}")
 
 @client.command()
 async def Ping(ctx):
