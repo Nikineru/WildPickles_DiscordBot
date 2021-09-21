@@ -3,13 +3,15 @@ import Logger
 from Token import TOKEN
 from discord.ext import commands
 
-client = commands.Bot(command_prefix = '!')
+intents = discord.Intents.all()
+client = commands.Bot(command_prefix='!', intents=intents)
 
 @client.event
 async def on_ready():
     print('Connected')
     client.load_extension('cogs.ProjectOrganizer')
     client.load_extension('cogs.Music')
+    client.load_extension('cogs.Roles')
 
 @client.event
 async def on_message(message):

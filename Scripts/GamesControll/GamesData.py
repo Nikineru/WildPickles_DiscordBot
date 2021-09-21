@@ -12,12 +12,16 @@ class Channel:
         else:
             await guild.create_voice_channel(self.Name, category=category)
 
-class Game:
-    def __init__(self, name, category, role):
-        self.Name = name,
-        self.RoleID = role
-        self.Channels = list(),
-        self.CategoryID = category,
+class GameData:
+    def __init__(self, name, role_id=0, category_id=0):
+        self.Name = self.GetValidName(name)
+        self.RoleName = self.GetRoleName()
+        self.RoleID = role_id
+        self.CategoryID = category_id
+
+        self.Channels = list()
+        #self.AddTextChannels("важное-❗", "переговорная-🛠", "беклог-📋", "изменения-🆕")
+        self.AddVoiceChannels("собрания-🔉")
 
     def AddTextChannels(self, *channels_names:str):
         for name in channels_names:
@@ -27,8 +31,7 @@ class Game:
         for name in channels_names:
             self.Channels.append(Channel(name, 1))
 
-    @staticmethod
-    def GetValidName(text):
+    def GetValidName(self, text):
         words = text.split()
 
         for i in range(len(words)):
@@ -47,6 +50,5 @@ class Game:
 
         return result.title()
 
-    @staticmethod
-    def GetRoleName(name):
-        return f"{name} developer"
+    def GetRoleName(self):
+        return f"{self.Name} developer"
