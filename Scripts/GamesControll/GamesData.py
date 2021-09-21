@@ -20,7 +20,7 @@ class GameData:
         self.CategoryID = category_id
 
         self.Channels = list()
-        #self.AddTextChannels("важное-❗", "переговорная-🛠", "беклог-📋", "изменения-🆕")
+        self.AddTextChannels("важное-❗", "переговорная-🛠", "беклог-📋", "изменения-🆕")
         self.AddVoiceChannels("собрания-🔉")
 
     def AddTextChannels(self, *channels_names:str):
@@ -52,3 +52,8 @@ class GameData:
 
     def GetRoleName(self):
         return f"{self.Name} developer"
+    
+    def GetChannelsByRoles(self, roles:list):
+        roles_dict = {
+            "":0
+        }

@@ -1,9 +1,14 @@
 import sqlite3
+from os import path
 from GamesControll.GamesData import GameData
+
 
 class DataWorker:
     def __init__(self):
-        self.DataBase = sqlite3.connect(r"C:\Панель Инструментов\Python\WildPickles_DiscordBot\Resources\DataBase.db")
+        parent_dir = path.dirname(path.abspath(__file__))
+        data_base_path = "/".join(parent_dir.split('\\')[:-2]) + "/Resources/DataBase.db"
+
+        self.DataBase = sqlite3.connect(data_base_path)
         self.Cursor = self.DataBase.cursor()
     
     def SetInfo(self, name, role_id, category_id):

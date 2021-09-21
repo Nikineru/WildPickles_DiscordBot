@@ -7,7 +7,8 @@ class Organizer(commands.Cog):
 
     @commands.Cog.listener()
     async def on_member_update(self, before, after):
-        print("Updated")
+        if(before.roles != after.roles):
+            pass
 
 def setup(client):
     client.add_cog(Organizer(client))
