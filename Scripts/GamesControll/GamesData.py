@@ -5,7 +5,7 @@ class Channel:
         self.Name = name
         self.Type = type
         self.AcessRole = access_role
-            
+        
     async def initialize(self, guild, category):
         if(self.Type == 0):
             await guild.create_text_channel(self.Name, category=category)
@@ -20,7 +20,7 @@ class GameData:
         self.CategoryID = category_id
 
         self.Channels = list()
-        self.AddTextChannels("важное-❗", "переговорная-🛠", "беклог-📋", "изменения-🆕")
+        self.AddTextChannels("важное-❗", "переговорная-🛠", "беклог-📋", "код-💻", "уровень-🌍", "cпрайты-🎨", "собеседования-💼")
         self.AddVoiceChannels("собрания-🔉")
 
     def AddTextChannels(self, *channels_names:str):
@@ -55,5 +55,12 @@ class GameData:
     
     def GetChannelsByRoles(self, roles:list):
         roles_dict = {
-            "":0
+            "777782071950442497":3,
+            "770885539430924309":5,
+            "889367207308566538":4,
+            "865089998079524884":4
         }
+
+        for role in roles:
+            if role.id in roles_dict.keys():
+                
